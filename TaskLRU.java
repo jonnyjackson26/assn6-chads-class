@@ -1,10 +1,10 @@
 import java.util.*;
 
 public class TaskLRU implements Runnable {
-    private int[] sequence;
-    private int maxMemoryFrames;
-    private int maxPageReference;
-    private int[] pageFaults;
+    private final int[] sequence;
+    private final int maxMemoryFrames;
+    private final int maxPageReference;
+    private final int[] pageFaults;
 
     public TaskLRU(int[] sequence, int maxMemoryFrames, int maxPageReference, int[] pageFaults) {
         this.sequence = sequence;
@@ -15,20 +15,25 @@ public class TaskLRU implements Runnable {
 
     @Override
     public void run() {
-        // LRU page replacement logic
-        Set<Integer> frames = new LinkedHashSet<>();
+        Set<Integer> pagesInMemory = new HashSet<>();
+        LinkedList<Integer> pageList = new LinkedList<>();
         int faults = 0;
+
         for (int page : sequence) {
-            if (!frames.contains(page)) {
-                faults++;
-                if (frames.size() >= maxMemoryFrames) {
-                    frames.remove(frames.iterator().next()); // Remove least recently used
+            if (!pagesInMemory.contains(page)) {
+                if (pagesInMemory.size() >= maxMemoryFrames) {
+                    int leastUsedPage = pageList.removeFirst();
+                    pagesInMemory.remove(leastUsedPage);
                 }
+                pagesInMemory.add(page);
+                pageList.add(page);
+                faults++;
             } else {
-                frames.remove(page); // Remove and re-add to mark as recently used
+                pageList.remove((Integer) page);
+                pageList.add(page);
             }
-            frames.add(page);
         }
+
         pageFaults[maxMemoryFrames] = faults;
     }
 }
